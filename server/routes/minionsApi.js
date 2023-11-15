@@ -1,9 +1,9 @@
 const express = require('express')
 const minionsApi = express.Router()
-const { getAllFromDatabase, addToDatabase, getFromDatabaseById } = require('../db')
+const { getAllFromDatabase, addToDatabase, getFromDatabaseById, updateInstanceInDatabase, deleteFromDatabasebyId } = require('../db')
 
 
-// GET all minions
+// - GET /api/minions to get an array of all minions.
 minionsApi.get('/', (req, res) => {
     const allMinions = getAllFromDatabase('minions')
     if (!allMinions) {
@@ -12,7 +12,7 @@ minionsApi.get('/', (req, res) => {
     res.status(200).send(allMinions)
 })
 
-// Create new minion
+// - POST /api/minions to create a new minion and save it to the database.
 minionsApi.post('/', (req, res) => {
     const {name, title, weaknesses, salary} = req.body
     const minionInstance = {
@@ -22,23 +22,50 @@ minionsApi.post('/', (req, res) => {
         salary,
     }
     if (!name || !title || !weaknesses || !salary) {
-        res.status(404).send('Please fill up all paramters to make a nwe minion')
+        res.status(404).send({message: 'Please fill up all paramters to make a nwe minion'})
     }
     const newMinion = addToDatabase('minions', minionInstance)
     // console.log(newMinion)
     res.status(201).send(newMinion)
 })
 
-//Get a single minion
+//  - GET /api/minions/:minionId to get a single minion by id.
 minionsApi.get('/:minionId', (req, res) => {
     const foundMinion = getFromDatabaseById('minions', req.params.minionId)
     console.log(foundMinion)
     if (!foundMinion) {
-        res.status(404).send({'message': "there's no minion with this ID"})
+        res.status(404).send({message: "there's no minion with this ID"})
     }
     res.status(200).send(foundMinion)
 })
-//- PUT /api/minions/:minionId to update a single minion by id.
-//- DELETE /api/minions/:minionId to delete a single minion by id.
+
+//  - PUT /api/minions/:minionId to update a single minion by id.
+minionsApi.put('/:minionId', (req, res) => {
+    const minionId = req.params.minionId
+    if (!minionId) return res.status(404).send({ message: 'this id is not valid'})
+    const {name, title, weaknesses, salary} = req.body
+    if (!name || !title || !weaknesses || !salary) return res.status(404).send({ message: 'please provide a name, title, weaknesses and salary' })
+    const updatedMinionInstance = {
+        id: minionId,
+        name,
+        title,
+        weaknesses,
+        salary,
+    }
+    // console.log(updatedMinionInstance)
+    const updatedMinion = updateInstanceInDatabase('minions', updatedMinionInstance)
+    // console.log(updatedMinion)
+    if (!updatedMinion) return res.status(404).send({message: "there's no minion with this ID"})
+    res.status(200).send(updatedMinion)
+})
+
+//  - DELETE /api/minions/:minionId to delete a single minion by id.
+minionsApi.delete('/:minionId', (req, res) =>{
+    minionId = req.params.minionId
+    if(!minionId) return res.status(404).send({message: 'no such minion'})
+    const deletedMinion = deleteFromDatabasebyId('minions', minionId)
+    // console.log(deletedMinion)
+    res.status(200).send({message: `minion ${minionId} deleted`})
+})
 
 module.exports = minionsApi
