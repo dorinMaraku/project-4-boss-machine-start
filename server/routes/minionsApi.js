@@ -1,13 +1,22 @@
 const express = require('express')
 const minionsApi = express.Router()
 const { getAllFromDatabase, addToDatabase, getFromDatabaseById, updateInstanceInDatabase, deleteFromDatabasebyId } = require('../db')
+const workApi = require('./workApi')
 
+
+// using param mw to pass the minionId 
+minionsApi.param('minionId', (req, res, next, minionId) => {
+    req.minionId = minionId
+    next()
+})
+// mounted single minion work api
+minionsApi.use('/:minionId/work', workApi)
 
 // - GET /api/minions to get an array of all minions.
 minionsApi.get('/', (req, res) => {
     const allMinions = getAllFromDatabase('minions')
     if (!allMinions) {
-        res.status(204).send({'message': 'No minions in db at the moment'})
+        res.status(204).send({message: 'No minions in db at the moment'})
     }
     res.status(200).send(allMinions)
 })
@@ -22,7 +31,7 @@ minionsApi.post('/', (req, res) => {
         salary,
     }
     if (!name || !title || !weaknesses || !salary) {
-        res.status(404).send({message: 'Please fill up all paramters to make a nwe minion'})
+        res.status(404).send({message: 'Please fill up all paramters to make a new minion'})
     }
     const newMinion = addToDatabase('minions', minionInstance)
     // console.log(newMinion)
@@ -32,7 +41,7 @@ minionsApi.post('/', (req, res) => {
 //  - GET /api/minions/:minionId to get a single minion by id.
 minionsApi.get('/:minionId', (req, res) => {
     const foundMinion = getFromDatabaseById('minions', req.params.minionId)
-    console.log(foundMinion)
+    // console.log(foundMinion)
     if (!foundMinion) {
         res.status(404).send({message: "there's no minion with this ID"})
     }
@@ -67,5 +76,6 @@ minionsApi.delete('/:minionId', (req, res) =>{
     // console.log(deletedMinion)
     res.status(200).send({message: `minion ${minionId} deleted`})
 })
+
 
 module.exports = minionsApi
