@@ -19,8 +19,13 @@ meetingsApi.post('/', (req, res) => {
 // - DELETE /api/meetings to delete _all_ meetings from the database.
 meetingsApi.delete('/', (req, res) => {
     const deletedEvent = deleteAllFromDatabase('meetings')
+    if (deletedEvent) {
+        res.status(204)
+    } else {
+        res.status(500)
+    }
     // console.log(deletedEvent)
-    res.status(204).send({body: 'all meetings deleted'})
+    res.send()
 })
 
 module.exports = meetingsApi;

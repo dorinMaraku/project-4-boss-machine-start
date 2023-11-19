@@ -1,10 +1,11 @@
 const checkMillionDollarIdea = (req, res, next) => {
-    if(!numWeeks || !weeklyRevenue) return
-    if((numWeeks * weeklyRevenue) < 1000000) {
-        return "Not a million $ idea!!!"
-    }
-    req.body.ideaValue = numWeeks * weeklyRevenue  
+    const {numWeeks, weeklyRevenue} = req.body;
+    const totalMoney = Number(numWeeks) * Number(weeklyRevenue)
+    if(!numWeeks || !weeklyRevenue || isNaN(totalMoney) || totalMoney < 1000000) {
+        res.status(400).send()
+    } else {
     next()
+    }
 };
 
 // Leave this exports assignment so that the function can be used elsewhere

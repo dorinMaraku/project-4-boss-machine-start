@@ -14,36 +14,35 @@ workApi.get('/', (req, res) => {
 // - POST /api/minions/:minionId/work to create a new work object and save it to the database.
 workApi.post('/', (req, res) => {
     const {title, description, hours} = req.body
-    const workInstance = {
-        title,
-        description,
-        hours,
-        minionId: req.minionId
-    }
     if (!title || !description || !hours) {
         return res.status(404).send({message: 'Please fill up all paramters to make a new minion'})
     }
-    const newWork = addToDatabase('work', workInstance)
+    const newWork = req.body
+    newWork.minionId = req.minionId
+    const createdWork = addToDatabase('work', newWork)
     // console.log(newWork)
-    res.status(201).send(newWork)
+    res.status(201).send(createdWork)
+})
+
+//  - GET /api/minions/:minionId/work/:workId to get a single work by id.
+workApi.get('/:workId', (req, res) => {
+    const foundWork = getFromDatabaseById('work', req.params.workId)
+    console.log(foundWork)
+    if (!foundWork) {
+        return res.status(404).send({message: "there's no work with this ID"})
+    }
+    res.status(200).send(foundWork)
 })
 
 // - PUT /api/minions/:minionId/work/:workId to update a single work by id.
 
 workApi.put('/:workId', (req, res) => {
-    const workId = req.params.workId
-    if (!workId) return res.status(404).send({ message: 'this id is not valid'})
     const {title, description, hours} = req.body
     if (!title || !description || !hours ) return res.status(404).send({ message: 'please provide title, description and howrs of work' })
-    const updatedWorkInstance = {
-        id: workId,
-        title,
-        description,
-        hours,
-        minionId: req.minionId
-    }
-    // console.log(updatedWorkInstance)
-    const updatedWork = updateInstanceInDatabase('work', updatedWorkInstance)
+    const workInstance = req.body
+    workInstance.id = req.params.workId
+    workInstance.minionId = req.minionId
+    const updatedWork = updateInstanceInDatabase('work', workInstance)
     // console.log(updatedWork)
     if (!updatedWork) return res.status(404).send({message: "there's no work with this ID"})
     res.status(200).send(updatedWork)
@@ -51,11 +50,14 @@ workApi.put('/:workId', (req, res) => {
 
 // - DELETE /api/minions/:minionId/work/:workId to delete a single work by id.
 workApi.delete('/:workId', (req, res) =>{
-    workId = req.params.workId
-    if(!workId) return res.status(404).send({message: 'no such minion'})
-    const deletedWork = deleteFromDatabasebyId('minions', workId)
+    const deletedWork = deleteFromDatabasebyId('minions', req.params.workId)
+    if (deletedWork) {
+        res.status(204)
+    } else {
+        res.status(500)
+    }
+    res.send()
     // console.log(deletedMinion)
-    res.status(200).send({message: `wrok with ID: ${workId} deleted`})
 })
 
 module.exports = workApi
